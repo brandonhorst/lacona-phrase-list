@@ -1,0 +1,39 @@
+{
+  "name": "lacona-phrase-list",
+  "version": "0.0.0",
+  "description": "Lacona phrase that accepts a programmatically-computed list of strings",
+  "main": "lib/list.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "lodash": "^2.4.1"
+  },
+  "devDependencies": {
+    "mocha": "^1.20.1",
+    "chai": "^1.9.1",
+    "lacona": "^0.0.7",
+    "sinon": "^1.10.3",
+    "sinon-chai": "^2.5.0"
+  },
+  "scripts": {
+    "test": "mocha test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brandonhorst/lacona-phrase-list.git"
+  },
+  "keywords": [
+    "lacona",
+    "phrase",
+    "computed",
+    "list",
+    "options"
+  ],
+  "author": "@brandonhorst",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/brandonhorst/lacona-phrase-list/issues"
+  },
+  "homepage": "https://github.com/brandonhorst/lacona-phrase-list"
+}
