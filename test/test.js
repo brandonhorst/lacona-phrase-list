@@ -1,6 +1,6 @@
 var chai = require('chai');
 var expect = chai.expect;
-var number = require('../lib/list')
+var list = require('../lib/list')
 var sinon = require('sinon');
 var Parser = require('lacona').Parser;
 
@@ -10,7 +10,7 @@ describe('list', function () {
 	var parser;
 
 	beforeEach(function () {
-		parser = new Parser().understand(number);
+		parser = new Parser({sentences: ['test']});
 	});
 
 	it('handles a list properly', function (done) {
@@ -29,14 +29,15 @@ describe('list', function () {
 
 				})
 			},
-			schema: {
+			phrases: [{
+				name: 'test',
 				root: {
 					type: 'list',
 					id: 'test',
 					collect: 'collectFunction'
-				},
-				run: ''
-			}
+				}
+			}],
+			dependencies: [list]
 		}
 
 		var handleData = sinon.spy(function (data) {
