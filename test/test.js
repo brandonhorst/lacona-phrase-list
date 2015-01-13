@@ -1,64 +1,149 @@
 var chai = require('chai');
 var expect = chai.expect;
-var list = require('../lib/list')
+var lacona = require('lacona');
 var sinon = require('sinon');
-var Parser = require('lacona').Parser;
+var stream = require('stream');
+
+var list = require('..');
 
 chai.use(require('sinon-chai'));
+
+function toStream(strings) {
+	var newStream = new stream.Readable({objectMode: true});
+
+	strings.forEach(function (string) {
+		newStream.push(string);
+	});
+	newStream.push(null);
+
+	return newStream;
+}
+
+function toArray(done) {
+	var newStream = new stream.Writable({objectMode: true});
+	var list = [];
+	newStream.write = function(obj) {
+		list.push(obj);
+	};
+
+	newStream.end = function() {
+		done(list);
+	};
+
+	return newStream;
+}
 
 describe('list', function () {
 	var parser;
 
 	beforeEach(function () {
-		parser = new Parser({sentences: ['test']});
+		parser = new lacona.Parser();
 	});
 
-	it('handles a list properly', function (done) {
-		var grammar = {
-			scope: {
-				collectFunction: sinon.spy(function(done) {
-					process.nextTick( function() {
+	describe('async', function () {
+		var test;
+		var spy;
+
+		beforeEach(function () {
+			spy = sinon.spy();
+			test = lacona.createPhrase({
+				name: 'test/test',
+				collectFunction: function(done) {
+					spy();
+					setTimeout(function() {
 						done(null, [{
-							display: 'test',
-							value: 'test value',
+							text: 'a test',
+							value: 'value a',
 						}, {
-							display: 'tesla',
-							value: 'tesla motors'
+							text: 'b test',
+							value: 'value b'
 						}]);
+					}, 0);
+				},
+				describe: function () {
+					return list({
+						id: 'test',
+						collect: this.collectFunction
 					});
-
-				})
-			},
-			phrases: [{
-				name: 'test',
-				root: {
-					type: 'list',
-					id: 'test',
-					collect: 'collectFunction'
 				}
-			}],
-			dependencies: [list]
-		}
+			});
 
-		var handleData = sinon.spy(function (data) {
-			expect(data.result.test).to.equal('test value');
-			expect(data.match[0].string).to.equal('test');
+			parser.sentences = [test()];
 		});
 
-		var handleEnd = sinon.spy(function () {
-			expect(handleData).to.have.callCount(handleEnd.callCount);
-			expect(grammar.scope.collectFunction).to.have.been.called.once;
-			if (handleEnd.calledTwice) {
+
+		it('handles a list properly (async)', function (done) {
+			function callback(data) {
+				var filteredData = data.filter(function (datum) {
+					return datum.event === 'data';
+				});
+				expect(data).to.have.length(6);
+				expect(filteredData).to.have.length(2);
+				expect(filteredData[0].data.suggestion.words[0].string).to.equal('a test');
+				expect(filteredData[0].data.result.test).to.equal('value a');
+				expect(filteredData[1].data.suggestion.words[0].string).to.equal('b test');
+				expect(filteredData[1].data.result.test).to.equal('value b');
+				expect(spy).to.have.been.calledOnce;
 				done();
-			} else {
-				parser.parse('test');
 			}
+
+			toStream(['a', 'b'])
+				.pipe(parser)
+				.pipe(toArray(callback));
+		});
+	});
+
+
+	describe('sync', function () {
+		var test;
+		var spy;
+
+		beforeEach(function () {
+			spy = sinon.spy();
+
+			test = lacona.createPhrase({
+				name: 'test/test',
+				collectFunction: function(done) {
+					spy();
+					done(null, [{
+						text: 'a test',
+						value: 'value a',
+					}, {
+						text: 'b test',
+						value: 'value b'
+					}]);
+				},
+				describe: function () {
+					return list({
+						id: 'test',
+						collect: this.collectFunction
+					});
+				}
+			});
+
+			parser.sentences = [test()];
 		});
 
-		parser
-		.understand(grammar)
-		.on('data', handleData)
-		.on('end', handleEnd)
-		.parse('test');
+		it('handles a list properly (sync)', function (done) {
+
+			function callback(data) {
+				var filteredData = data.filter(function (datum) {
+					return datum.event === 'data';
+				});
+
+				expect(data).to.have.length(6);
+				expect(filteredData).to.have.length(2);
+				expect(filteredData[0].data.suggestion.words[0].string).to.equal('a test');
+				expect(filteredData[0].data.result.test).to.equal('value a');
+				expect(filteredData[1].data.suggestion.words[0].string).to.equal('b test');
+				expect(filteredData[1].data.result.test).to.equal('value b');
+				expect(spy).to.have.been.calledOnce;
+				done();
+			}
+
+			toStream(['a', 'b'])
+				.pipe(parser)
+				.pipe(toArray(callback));
+		});
 	});
 });
