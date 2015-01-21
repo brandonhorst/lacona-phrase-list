@@ -1,5 +1,6 @@
 var chai = require('chai');
 var expect = chai.expect;
+var fulltext = require('lacona-util-fulltext');
 var lacona = require('lacona');
 var sinon = require('sinon');
 var stream = require('stream');
@@ -79,9 +80,9 @@ describe('list', function () {
 				});
 				expect(data).to.have.length(6);
 				expect(filteredData).to.have.length(2);
-				expect(filteredData[0].data.suggestion.words[0].string).to.equal('a test');
+				expect(fulltext.suggestion(filteredData[0].data)).to.equal('a test');
 				expect(filteredData[0].data.result.test).to.equal('value a');
-				expect(filteredData[1].data.suggestion.words[0].string).to.equal('b test');
+				expect(fulltext.suggestion(filteredData[1].data)).to.equal('b test');
 				expect(filteredData[1].data.result.test).to.equal('value b');
 				expect(spy).to.have.been.calledOnce;
 				done();
@@ -133,9 +134,9 @@ describe('list', function () {
 
 				expect(data).to.have.length(6);
 				expect(filteredData).to.have.length(2);
-				expect(filteredData[0].data.suggestion.words[0].string).to.equal('a test');
+				expect(fulltext.suggestion(filteredData[0].data)).to.equal('a test');
 				expect(filteredData[0].data.result.test).to.equal('value a');
-				expect(filteredData[1].data.suggestion.words[0].string).to.equal('b test');
+				expect(fulltext.suggestion(filteredData[1].data)).to.equal('b test');
 				expect(filteredData[1].data.result.test).to.equal('value b');
 				expect(spy).to.have.been.calledOnce;
 				done();
