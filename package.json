@@ -1,6 +1,6 @@
 {
   "name": "lacona-phrase-list",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Lacona phrase that accepts a programmatically-computed list of strings",
   "main": "lib/list.js",
   "directories": {
