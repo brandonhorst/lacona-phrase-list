@@ -90,7 +90,7 @@ describe('list', function () {
 					}]);
 				},
 				getDefault: function (done) {
-					done(null, 'myDefault');
+					done(null, {text: 'myDefault', value: 'myDefaultValue'});
 				},
 				describe: function () {
 					return list({
@@ -125,7 +125,7 @@ describe('list', function () {
 			function callback(err, data) {
 				expect(data).to.have.length(3);
 				expect(fulltext.suggestion(data[1].data)).to.equal('myDefault');
-				expect(data[1].data.result.test).to.equal('myDefault');
+				expect(data[1].data.result.test).to.equal('myDefaultValue');
 				done();
 			}
 
