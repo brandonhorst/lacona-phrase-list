@@ -130,8 +130,8 @@ describe('list', function () {
 			}
 
 			es.readArray([''])
-			.pipe(parser)
-			.pipe(es.writeArray(callback));
+				.pipe(parser)
+				.pipe(es.writeArray(callback));
 		});
 	});
 });

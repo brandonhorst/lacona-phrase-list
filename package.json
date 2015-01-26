@@ -7,7 +7,7 @@
     "test": "test"
   },
   "dependencies": {
-    "lacona": "^0.16.1"
+    "lacona": "^0.16.2"
   },
   "devDependencies": {
     "chai": "^1.10.0",
