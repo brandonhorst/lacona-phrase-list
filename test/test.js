@@ -1,38 +1,13 @@
 var chai = require('chai');
+var es = require('event-stream');
 var expect = chai.expect;
 var fulltext = require('lacona-util-fulltext');
 var lacona = require('lacona');
 var sinon = require('sinon');
-var stream = require('stream');
 
 var list = require('..');
 
 chai.use(require('sinon-chai'));
-
-function toStream(strings) {
-	var newStream = new stream.Readable({objectMode: true});
-
-	strings.forEach(function (string) {
-		newStream.push(string);
-	});
-	newStream.push(null);
-
-	return newStream;
-}
-
-function toArray(done) {
-	var newStream = new stream.Writable({objectMode: true});
-	var list = [];
-	newStream.write = function(obj) {
-		list.push(obj);
-	};
-
-	newStream.end = function() {
-		done(list);
-	};
-
-	return newStream;
-}
 
 describe('list', function () {
 	var parser;
@@ -73,8 +48,8 @@ describe('list', function () {
 		});
 
 
-		it('handles a list properly (async)', function (done) {
-			function callback(data) {
+		it('handles a list properly', function (done) {
+			function callback(err, data) {
 				var filteredData = data.filter(function (datum) {
 					return datum.event === 'data';
 				});
@@ -88,9 +63,9 @@ describe('list', function () {
 				done();
 			}
 
-			toStream(['a', 'b'])
+			es.readArray(['a', 'b'])
 				.pipe(parser)
-				.pipe(toArray(callback));
+				.pipe(es.writeArray(callback));
 		});
 	});
 
@@ -114,10 +89,14 @@ describe('list', function () {
 						value: 'value b'
 					}]);
 				},
+				getDefault: function (done) {
+					done(null, 'myDefault');
+				},
 				describe: function () {
 					return list({
 						id: 'test',
-						collect: this.collectFunction
+						collect: this.collectFunction,
+						default: this.getDefault
 					});
 				}
 			});
@@ -125,26 +104,34 @@ describe('list', function () {
 			parser.sentences = [test()];
 		});
 
-		it('handles a list properly (sync)', function (done) {
+		it('handles a list properly', function (done) {
 
-			function callback(data) {
-				var filteredData = data.filter(function (datum) {
-					return datum.event === 'data';
-				});
-
+			function callback(err, data) {
 				expect(data).to.have.length(6);
-				expect(filteredData).to.have.length(2);
-				expect(fulltext.suggestion(filteredData[0].data)).to.equal('a test');
-				expect(filteredData[0].data.result.test).to.equal('value a');
-				expect(fulltext.suggestion(filteredData[1].data)).to.equal('b test');
-				expect(filteredData[1].data.result.test).to.equal('value b');
+				expect(fulltext.suggestion(data[1].data)).to.equal('a test');
+				expect(data[1].data.result.test).to.equal('value a');
+				expect(fulltext.suggestion(data[4].data)).to.equal('b test');
+				expect(data[4].data.result.test).to.equal('value b');
 				expect(spy).to.have.been.calledOnce;
 				done();
 			}
 
-			toStream(['a', 'b'])
+			es.readArray(['a', 'b'])
 				.pipe(parser)
-				.pipe(toArray(callback));
+				.pipe(es.writeArray(callback));
+		});
+
+		it('allows a default', function (done) {
+			function callback(err, data) {
+				expect(data).to.have.length(3);
+				expect(fulltext.suggestion(data[1].data)).to.equal('myDefault');
+				expect(data[1].data.result.test).to.equal('myDefault');
+				done();
+			}
+
+			es.readArray([''])
+			.pipe(parser)
+			.pipe(es.writeArray(callback));
 		});
 	});
 });
